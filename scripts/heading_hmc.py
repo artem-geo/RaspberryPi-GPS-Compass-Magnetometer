@@ -10,19 +10,18 @@ from ublox import ubx
 
 def parse_GPS_message(data):
     """
-    Функция для чтения строки сообщения NMEA.
-    Возвращает список элементов сообщения.
+    Reads NMEA message.
+    Returns tokenised message
     """
     return data[data.find(b'$'):].decode('utf-8').split(',')
 
 
 def get_data_from_NMEA(s, num):
     """
-    Функция для извлечения данных из сообщения get_data_from_NMEA
-    s - строка сообщения
-    num = 0 - возвращает объект datetime из сообщения GPGRMC
-    num = 0 - возвращает список, содержащий широту, долготу, высоту (MSL) из
-    сообщения GPGGA
+    Gets data from the NMEA message
+    s - message
+    num = 0 -flag to return datetime from GPGRMC
+    num = 1 - flag to return list of lat lon and MSL from GPGGA
     """
     s = str(s, encoding='utf-8').split(',')
     if num == 0:
@@ -32,9 +31,6 @@ def get_data_from_NMEA(s, num):
 
 
 def LED_blinking(led, button):
-    """
-    Функция обеспечивает моргание светодиода
-    """
     while True:
         time.sleep(0.5)
         GPIO.output(led, GPIO.HIGH)
@@ -48,8 +44,7 @@ def LED_blinking(led, button):
 
 def decl_tuple(decl):
     """
-    Конвертирование наклонения в кортеж = (dd, mm),
-    где dd - градусы, mm - минуты
+    Converts declination to (dd, mm)
     """
     if ('.' in decl):
         decl = decl.split('.')
@@ -60,47 +55,45 @@ def decl_tuple(decl):
     return tuple([int(i) for i in decl])
 
 
-# присвоение pin-ов переменным
+# set pins to variables
 LED_red = 29
 LED_green = 33
 button = 18
 
-GPIO.setmode(GPIO.BOARD)  # установка режима нумерации pin-ов от 1 - 40
-GPIO.setwarnings(False)  # отлючение всех предупреждений
+GPIO.setmode(GPIO.BOARD)  # pin numbering from 1 to 40
+GPIO.setwarnings(False)
 
-# инициализация pin-ов
+# pin init
 GPIO.setup(LED_red, GPIO.OUT, initial=GPIO.HIGH)  # red_led - ouput channel
 GPIO.setup(LED_green, GPIO.OUT, initial=GPIO.LOW)  # green_led - output channel
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button - input channel
 
-# при нажатии на кнопку цикл/программа должна прекращить работу
 GPIO.add_event_detect(button, GPIO.FALLING)
 
 # GPS
-# инициализация GPS
+# init GPS
 ser = Serial('/dev/ttyAMA0', baudrate=9600)
 gps = ubx.UbxStream(ser)
-gps.cfg_rate(200)  # установка частоты опроса
+gps.cfg_rate(200)  # set sampling freq
 
 ser.flush()  # очистка буфера
 
-# начало времени GPST (Jan 6 1980 00:00:00.00)
+# GPST (Jan 6 1980 00:00:00.00)
 gps_epoch = datetime.datetime(1980, 1, 6).timestamp()
 
-# считывание параметров с файла param
+# get parameters from the param file
 with open('/home/pi/Documents/scripts/param', 'r') as prs:
-    freq = int(prs.readline())  # частота работы магнитометра
-    decl = prs.readline()  # склонение магн.поля в районе работ (dd.mm)
+    freq = int(prs.readline())  # mag freq
+    decl = prs.readline()  # declination within the AOI (dd.mm)
     prs.close()
 
 # COMPASS
-# инициализация компаса
+# init compass
 mag = hmc5883l.hmc5883l(port=1, address=0x1e, gauss=1.3, declination=decl_tuple(decl))
 
-# при записи показаний магнитометра время считывается с RP.
-# Поэтому исполнение скрипта продолжится после нахождения GPS достаточного
-# количества спутников. При нажатии кнопки до нахождения спутников,
-# программа закончит свою работу, и компьютер выключится.
+# while writing mag readings time is taken from RP
+# script will keep running when a sufficient number of satellites are seen
+# if the button is pressed before sats are found, the script terminates and the RP shuts down
 while True:
     if GPIO.event_detected(button):
         time.sleep(1)
@@ -111,7 +104,7 @@ while True:
             data = parse_GPS_message(s)
             if (len(data[1]) > 6) and (len(data[9]) > 5) and \
                (len(data[3]) > 3) and (len(data[5]) > 3):
-                # установка времени на RP (UTC)
+                # set RP date (UTC)
                 ostime = get_data_from_NMEA(s, 0).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
                 os.system(f'sudo date --set="{ostime}"')
                 break
@@ -121,35 +114,33 @@ while True:
 
 LED_blinking(LED_green, button)
 
-# непрерывно горящий светодиод сигнализирует о начале записи координат и азимута
+# constantly working LED tells that coordinates are being written
 GPIO.output(LED_green, GPIO.HIGH)
 
 
-# имя файла -  yyyymmdd_HHMMSS_AZ.txt
+# file name -  yyyymmdd_HHMMSS_AZ.txt
 # y - year, m - month, d - day, H - hour, M - minute, S - second
 filename = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_AZ.txt')
 
 with open(f'/home/pi/Documents/data/{filename}', 'w') as f:
 
-    f.write('GPST AZ LAT LON HGT(MSL)\n')  # запись заголовка в файл
+    f.write('GPST AZ LAT LON HGT(MSL)\n')
 
     while True:
         try:
             s = ser.readline()
-            m = fabs(mag.heading() - 360)  # 360 вычитается для корректного отображения азимута
+            m = fabs(mag.heading() - 360)  # subtract 360 for correct az
 
-            if b'$GPGGA' in s:  # координаты считываются с сообщения GPGGA
+            if b'$GPGGA' in s:  # get coords from GPGGA
 
-                # вычисление времени GPS
+                # calcs GPS time
                 # GPST = Epoch time - Epoch time of GPST + leap seconds
                 cur_time = datetime.datetime.now().timestamp() - gps_epoch + 18
-                # получение координат из сообщения GPGGA (lat, lon, height)
                 coord = get_data_from_NMEA(s, 1)
-                # запись данных в файл
                 f.write(f'{cur_time} {m} {coord[0]} {coord[1]} {coord[2]}\n')
             else:
                 continue
-            # запись в файл прекратится после нажатия на кнопку
+            # when the button is pressed, coordinates are written into a file
             if GPIO.event_detected(button):
 
                 f.close()
@@ -162,5 +153,5 @@ LED_blinking(LED_green, button)
 
 GPIO.cleanup()
 
-# по окончании работы скрипта компьютер выключится
+# when the script is over, the RP shuts down
 os.system('sudo shutdown now')
