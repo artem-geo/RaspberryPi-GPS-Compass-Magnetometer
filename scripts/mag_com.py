@@ -141,7 +141,6 @@ button = 16
 GPIO.setmode(GPIO.BOARD)  # set pin numbering from 1 to 40
 GPIO.setwarnings(False)
 
-# инициализация pin-ов
 GPIO.setup(LED_yellow, GPIO.OUT, initial=GPIO.LOW)  # green_led - output channel
 GPIO.setup(button, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # button - input channel
 
