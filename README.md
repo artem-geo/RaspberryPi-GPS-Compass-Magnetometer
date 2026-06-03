@@ -143,19 +143,6 @@ GPST DATE(UTC) TIME(UTC) FIELD
 
 Before running the converter, update the hard-coded `filename` variable inside `MG_byte_to_str.py` so it points to the raw `*_MG.txt` file you want to convert. The converter writes a sibling file ending in `_c.txt`.
 
-## Typical Field Workflow
-
-1. Prepare the Raspberry Pi with UART, I2C, SSH, and Wi-Fi configured.
-2. Copy the scripts to `/home/pi/Documents/scripts/`.
-3. Create `/home/pi/Documents/data/`.
-4. Edit `scripts/param` for survey frequency and magnetic declination.
-5. Connect the GPS, compass, buttons, LEDs, RS232-to-USB adapter, power converter, and magnetometer according to `files/scheme.jpg`.
-6. Start the GPS/compass logger for the installed compass module.
-7. Start `mag_com.py` to collect magnetic field readings.
-8. Stop recording with the hardware buttons.
-9. Convert raw magnetometer output with `MG_byte_to_str.py`.
-10. Join or compare the `*_AZ.txt` and `*_MG_c.txt` files by GPS time during post-processing.
-
 ## Boot Helper Files
 
 `files/files_exam/` contains example files for headless Raspberry Pi setup:
