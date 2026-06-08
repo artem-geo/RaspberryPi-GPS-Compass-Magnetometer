@@ -49,10 +49,10 @@ The prototype was built around:
 The prototype electronics were later packed into a small field box for easier transport and operation with the magnetometer system. The boxed assembly kept the Raspberry Pi, interface wiring, power conversion, controls, and connectors together as a single unit.
 
 ![Final boxed assembly, internal layout](files/compilation_1.jpg)
-*Final assembly in the field box, showing the internal hardware layout*
+*Final assembly in the field box*
 
 ![Final boxed assembly, external view and wiring](files/compilation_2.jpg)
-*Final assembly in the field box with external connections*
+*Final assembly in the field box*
 
 ## Raspberry Pi Pin Usage
 
