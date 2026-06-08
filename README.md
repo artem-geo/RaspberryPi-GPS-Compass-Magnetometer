@@ -7,6 +7,7 @@ The repository contains the original Raspberry Pi acquisition scripts, example o
 ## System Layout
 
 ![Raspberry Pi, GPS, compass, RS232-USB, buttons, LEDs, and magnetometer wiring scheme](files/scheme.jpg)
+*Raspberry Pi, GPS, compass, RS232-USB, buttons, LEDs, and magnetometer wiring scheme*
 
 The scheme shows the main prototype wiring:
 
@@ -27,6 +28,12 @@ The numbered controls in the scheme correspond to:
 
 ## Hardware
 
+![Hardware components used in the prototype](files/hardware.jpg)
+*Hardware components used in the Raspberry Pi magnetometer prototype*
+
+![Prototype wiring and hardware setup](files/prototyping.jpg)
+*Prototype wiring and hardware setup during development*
+
 The prototype was built around:
 
 - Raspberry Pi with GPIO, UART, I2C, and USB.
@@ -36,6 +43,16 @@ The prototype was built around:
 - HMC5883L compass at I2C address `0x1e`, or QMC5883L compass at I2C address `0x0d`.
 - Status LEDs and buttons connected to Raspberry Pi board pins.
 - External power system with a 12 V to 5 V DC-DC converter.
+
+## Final Assembly
+
+The prototype electronics were later packed into a small field box for easier transport and operation with the magnetometer system. The boxed assembly kept the Raspberry Pi, interface wiring, power conversion, controls, and connectors together as a single unit.
+
+![Final boxed assembly, internal layout](files/compilation_1.jpg)
+*Final assembly in the field box, showing the internal hardware layout*
+
+![Final boxed assembly, external view and wiring](files/compilation_2.jpg)
+*Final assembly in the field box with external connections*
 
 ## Raspberry Pi Pin Usage
 
